@@ -1,6 +1,7 @@
 import socket
 import sys
 import time
+import os
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -9,7 +10,7 @@ import string
 serverIp = sys.argv[1]
 serverPort = sys.argv[2]
 folderPath = sys.argv[3]
-#timeToUpdate = sys.argv[4]
+timeToUpdate = sys.argv[4]
 newFolder = True
 if len(sys.argv) == 6:
     identifier = sys.argv[5]
@@ -30,6 +31,24 @@ def on_moved(event):
 
 
 if __name__ == "__main__":
+    #open socket:
+    print("1")
+    skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("2")
+    skClient.connect(('127.0.0.1', 12345))
+    print("1")
+
+    #going through each file in given folder
+    for file_name in os.listdir(folderPath):
+        #opening the file and sending to the server 1024b at a time:
+        file = open(file_name, "wb")
+        skClient.send(file)
+        sRead = file.read(1024)
+        while sRead:
+            skClient.send(sRead)
+            sRead = file.read(1024)
+        skClient.send("endfile")
+
     patterns = ["*"]
     ignore_patterns = None
     ignore_directories = False
@@ -52,5 +71,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         my_observer.stop()
         my_observer.join()
+
+
 
 
