@@ -2,10 +2,18 @@ import socket
 import sys
 import time
 import os
-
+import utils
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import string
+
+root_dir = ''
+
+
+def define_root_dir(full_path):
+    global root_dir
+    root_dir = full_path
+
 
 serverIp = sys.argv[1]
 serverPort = sys.argv[2]
@@ -16,11 +24,14 @@ if len(sys.argv) == 6:
     identifier = sys.argv[5]
     newFolder = False
 
+
 def on_created(event):
     print(f"{event.src_path} has been created")
 
+
 def on_deleted(event):
     print(f"{event.src_path} has been deleted")
+
 
 def on_modified(event):
     print(f"{event.src_path} has been modified")
@@ -31,52 +42,26 @@ def on_moved(event):
 
 
 #####
-def send_file(file_name, socket):
-    final_file = os.path.join(os.getcwd(), file_name)
-    file_size = os.path.getsize(final_file)
-    #socket.send(file_name.encode())
-    #socket.send(str(file_size).encode())
-    send_word(file_name, socket)
-    send_word(file_size,socket)
-    # Opening file and sending data.
-    with open(file_name, "rb") as file:
-        c = 0
-        # Starting the time capture.
-        start_time = time.time()
-        # Running loop while c != file_size.
-        while c < file_size:
-            data = file.read(1024)
-            if not (data):
-                break
-            socket.sendall(data)
-            c += len(data)
-
-        # Ending the time capture.
-        end_time = time.time()
-    print("File Transfer client Complete.Total time: ", end_time - start_time)
 
 
-def send_word(word, socket):
-    c = 0
-    word = str(word) + '~'
-    # Starting the time capture.
-    # Running loop while c != file_size.
-    while c < len(word):
-        data = word[c]
-        if not (data):
-            break
-        socket.sendall(data.encode())
-        c += len(data)
+# for filename in os.listdir(final_dir):
+#     if os.path.isdir(filename):
+#         # print(os.path.join(directory, filename))
+#         send_dir(os.path.join(dir_name,filename),socket)
+#         continue
+#     else:
+#         send_file(os.path.join(dir_name,filename),socket)
 
 
 if __name__ == "__main__":
-    #open socket:
+    # open socket:
     skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    skClient.connect(('127.0.0.1', 12345))
-    send_file("a.txt",skClient)
+    skClient.connect(('127.0.0.1', 12346))
+    define_root_dir("/home/yonadav/Music/")
+    utils.send_dir(os.path.join(root_dir, "filesOfClient"), root_dir, skClient)
 
 
-
+    # send_file("a.txt",skClient)
 
     #
     # #going through each file in given folder
@@ -114,7 +99,3 @@ if __name__ == "__main__":
     # except KeyboardInterrupt:
     #     my_observer.stop()
     #     my_observer.join()
-
-
-
-
