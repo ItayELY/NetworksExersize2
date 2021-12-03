@@ -7,22 +7,24 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import string
 
+########################################################
+# Global Variables
 root_dir = ''
+serverIp = sys.argv[1]
+serverPort = sys.argv[2]
+argDirPath = sys.argv[3]
+timeToUpdate = sys.argv[4]
+
+new_to_the_club = True
+if len(sys.argv) == 6:
+    identifier = sys.argv[5]
+    new_to_the_club = False
+########################################################
 
 
 def define_root_dir(full_path):
     global root_dir
     root_dir = full_path
-
-
-serverIp = sys.argv[1]
-serverPort = sys.argv[2]
-folderPath = sys.argv[3]
-timeToUpdate = sys.argv[4]
-newFolder = True
-if len(sys.argv) == 6:
-    identifier = sys.argv[5]
-    newFolder = False
 
 
 def on_created(event):
@@ -53,13 +55,37 @@ def on_moved(event):
 #         send_file(os.path.join(dir_name,filename),socket)
 
 
+def subscribe_new_user(root_dir, socket):
+    utils.send_word("I want to register a new user", socket)
+    utils.send_word("I am new to the club", socket)
+    global identifier
+    identifier = utils.receive_word(socket)
+    print("Just received identifier from server: " + identifier)
+    print("Proceeding to send root directory to server")
+    utils.send_dir(root_dir, root_dir, socket)
+
+
+def sign_up_existing_user(root_path, socket):
+    utils.create_dir(root_path)
+    utils.send_word("send me directory by identifier, please")
+
+
+
 if __name__ == "__main__":
     # open socket:
     skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    skClient.connect(('127.0.0.1', 12346))
-    define_root_dir("/home/yonadav/Music/")
-    utils.send_dir(os.path.join(root_dir, "filesOfClient"), root_dir, skClient)
 
+    define_root_dir("/home/yonadav/Music/")
+    skClient.connect(('127.0.0.1', 12345))
+    if new_to_the_club:
+        subscribe_new_user(root_dir, skClient)
+    if not new_to_the_club:
+        sign_up_existing_user()
+        utils.create_dir(argDirPath)
+
+
+
+    # utils.send_dir(os.path.join(root_dir, "filesOfClient"), root_dir, skClient)
 
     # send_file("a.txt",skClient)
 

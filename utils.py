@@ -12,6 +12,7 @@ def remove_prefix(str, prefix):
 def send_file(file_absolute_path, root, socket):
     file_size = os.path.getsize(file_absolute_path)
     file_path_from_root = remove_prefix(file_absolute_path, root)
+    print("sending the following file: " + file_absolute_path)
 
     send_word("sending file", socket)
     send_word(file_size, socket)
@@ -49,6 +50,7 @@ def send_dir(dir_absolute_path, root, socket):
     # send myself
     send_word("sending directory", socket)
     send_word(remove_prefix(dir_absolute_path, root), socket)
+    print("sending the following directory: " + dir_absolute_path)
 
     print(dir_absolute_path)
 
@@ -64,6 +66,7 @@ def send_dir(dir_absolute_path, root, socket):
 
 
 def receive_file(file_name_absolute, file_size, socket):
+    print("receiving the following file " + file_name_absolute)
     with open(file_name_absolute, "wb") as file:
 
         c = 0
