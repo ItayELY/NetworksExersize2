@@ -19,6 +19,8 @@ new_to_the_club = True
 if len(sys.argv) == 6:
     identifier = sys.argv[5]
     new_to_the_club = False
+
+
 ########################################################
 
 
@@ -67,7 +69,24 @@ def subscribe_new_user(root_dir, socket):
 
 def sign_up_existing_user(root_path, socket):
     utils.create_dir(root_path)
-    utils.send_word("send me directory by identifier, please")
+    utils.send_word("send me directory by identifier, please", socket)
+    utils.send_word(identifier, socket)
+    # main loop
+    while True:
+        what_server_said = utils.receive_word(socket)
+        if (what_server_said == "sending file"):
+                print("receive file")
+                file_size = utils.receive_word(socket)
+                file_path_from_root = utils.receive_word(socket)
+                print("Got a new file!" + file_path_from_root)
+                utils.receive_file(os.path.join(root_path, file_path_from_root), file_size,
+                                   socket)
+
+        if (what_server_said == "sending directory"):
+            dir_path = utils.receive_word(socket)
+            dir_absolute = os.path.join(root_path, dir_path)
+            utils.create_dir(os.path.join(root_path, dir_path))
+
 
 
 
@@ -80,10 +99,8 @@ if __name__ == "__main__":
     if new_to_the_club:
         subscribe_new_user(root_dir, skClient)
     if not new_to_the_club:
-        sign_up_existing_user()
+        sign_up_existing_user(root_dir, skClient)
         utils.create_dir(argDirPath)
-
-
 
     # utils.send_dir(os.path.join(root_dir, "filesOfClient"), root_dir, skClient)
 

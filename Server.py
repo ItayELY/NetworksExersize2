@@ -7,7 +7,7 @@ import utils
 
 ########################################################
 # Global Variables
-dir_of_all_clients_path = "/home/yonadav/NetworksExersize2/clients"
+dir_of_all_clients_path = "/home/yonadav/NetworksExersize2/clients/"
 root_dir_of_current_client = ""
 
 
@@ -23,12 +23,10 @@ def accept_new_user(socket):
     root_dir_of_current_client = os.path.join(dir_of_all_clients_path, identifier)
 
 
-
 def handle_old_user(identifier, socket):
     user_dir_path = os.path.join(identifier, dir_of_all_clients_path)
-    #send to client his dir
-    utils.send_dir(user_dir_path,os.path.basename(user_dir_path), socket)
-
+    # send to client his dir
+    utils.send_dir(user_dir_path, os.path.basename(user_dir_path), socket)
 
 
 def welcome_client(socket):
@@ -40,7 +38,7 @@ def welcome_client(socket):
     if str(identifier) == "I am new to the club":
         accept_new_user(socket)
     else:
-        handle_old_user(identifier ,socket)
+        handle_old_user(identifier, socket)
 
 
 def generate_identifier(chars=string.ascii_uppercase + string.ascii_lowercase + string.digits, N=128):
@@ -81,6 +79,11 @@ if __name__ == "__main__":
 
             if (what_client_did == "I want to register a new user"):
                 accept_new_user(connected_socket)
+
+            if (what_client_did == "send me directory by identifier, please"):
+                identifier = utils.receive_word(connected_socket)
+                dir_full_path = os.path.join(dir_of_all_clients_path, identifier)
+                utils.send_dir(dir_full_path, dir_full_path, connected_socket)
 
         # client_socket, client_address = server.accept()
         # print('Connection from: ', client_address)

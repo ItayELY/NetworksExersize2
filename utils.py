@@ -11,7 +11,12 @@ def remove_prefix(str, prefix):
 
 def send_file(file_absolute_path, root, socket):
     file_size = os.path.getsize(file_absolute_path)
+
     file_path_from_root = remove_prefix(file_absolute_path, root)
+    if len(file_path_from_root) > 0:
+        if file_path_from_root[0] == '/':
+            file_path_from_root = file_path_from_root[1:]
+
     print("sending the following file: " + file_absolute_path)
 
     send_word("sending file", socket)
@@ -29,7 +34,7 @@ def send_file(file_absolute_path, root, socket):
                 break
             socket.sendall(data)
             c += len(data)
-
+        time.sleep(0.5)
         # Ending the time capture.
         end_time = time.time()
     print("File Transfer client Complete.Total time: ", end_time - start_time)
@@ -49,10 +54,14 @@ def send_word(word, socket):
 def send_dir(dir_absolute_path, root, socket):
     # send myself
     send_word("sending directory", socket)
-    send_word(remove_prefix(dir_absolute_path, root), socket)
+    # send path from root
+    relative = remove_prefix(dir_absolute_path, root)
+    if len(relative) > 0:
+        if relative[0] == '/':
+            relative = relative[1:]
+    send_word(relative, socket)
     print("sending the following directory: " + dir_absolute_path)
 
-    print(dir_absolute_path)
 
     for filename in os.listdir(dir_absolute_path):
         full_path_of_filename = os.path.join(dir_absolute_path, filename)
