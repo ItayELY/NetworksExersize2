@@ -14,6 +14,8 @@ serverIp = sys.argv[1]
 serverPort = sys.argv[2]
 argDirPath = sys.argv[3]
 timeToUpdate = sys.argv[4]
+changes_to_be_pushed = set()
+debugPort = 12348
 
 new_to_the_club = True
 if len(sys.argv) == 6:
@@ -31,14 +33,20 @@ def define_root_dir(full_path):
 
 def on_created(event):
     print(f"{event.src_path} has been created")
+    description = utils.stringify_event(event, "created")
+    changes_to_be_pushed.add(description)
 
 
 def on_deleted(event):
     print(f"{event.src_path} has been deleted")
+    description = utils.stringify_event(event, "deleted")
+    changes_to_be_pushed.add(description)
+    print("Hi")
 
 
 def on_modified(event):
     print(f"{event.src_path} has been modified")
+    description = utils.stringify_event(event, "modified")
 
 
 def on_moved(event):
@@ -75,32 +83,86 @@ def sign_up_existing_user(root_path, socket):
     while True:
         what_server_said = utils.receive_word(socket)
         if (what_server_said == "sending file"):
-                print("receive file")
-                file_size = utils.receive_word(socket)
-                file_path_from_root = utils.receive_word(socket)
-                print("Got a new file!" + file_path_from_root)
-                utils.receive_file(os.path.join(root_path, file_path_from_root), file_size,
-                                   socket)
+            print("receive file")
+            file_size = utils.receive_word(socket)
+            file_path_from_root = utils.receive_word(socket)
+            print("Got a new file!" + file_path_from_root)
+            utils.receive_file(os.path.join(root_path, file_path_from_root), file_size,
+                               socket)
 
         if (what_server_said == "sending directory"):
             dir_path = utils.receive_word(socket)
             dir_absolute = os.path.join(root_path, dir_path)
             utils.create_dir(os.path.join(root_path, dir_path))
 
+        if (what_server_said == "finished sending root directory"):
+            utils.send_word("finished for now", skClient)
+            return
+
+
+def run_watchdog():
+    # Watchdog
+    patterns = ["*"]
+    ignore_patterns = None
+    ignore_directories = False
+    case_sensitive = True
+    my_event_handler = PatternMatchingEventHandler(patterns, ignore_patterns, ignore_directories, case_sensitive)
+
+    my_event_handler.on_created = on_created
+    my_event_handler.on_deleted = on_deleted
+    my_event_handler.on_modified = on_modified
+    my_event_handler.on_moved = on_moved
+
+    go_recrsive = True
+    my_observer = Observer()
+    my_observer.schedule(my_event_handler, root_dir, recursive=go_recrsive)
+
+    my_observer.start()
+    try:
+        while True:
+            time.sleep(int(timeToUpdate))
+            handel_changes()
+    except KeyboardInterrupt:
+        my_observer.stop()
+        my_observer.join()
+
+
+def handel_changes():
+    for change in changes_to_be_pushed:
+        type = utils.get_type_of_stringified_event(change)
+        absolute_path = utils.get_path_of_stringified_event(change)
+        skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        skClient.connect(('127.0.0.1', debugPort))
+        utils.send_word(identifier, skClient)
+        if type == "deleted":
+            utils.notify_delete_file_or_dir(absolute_path, root_dir,
+                                            skClient)
+
+        if type == "created" or type == "modified":
+            utils.send_file(absolute_path, root_dir, skClient)
+        utils.send_word("finished for now", skClient)
+    changes_to_be_pushed.clear()
 
 
 
 if __name__ == "__main__":
     # open socket:
     skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    skClient.connect(('127.0.0.1', debugPort))
 
     define_root_dir("/home/yonadav/Music/")
-    skClient.connect(('127.0.0.1', 12345))
+
+
     if new_to_the_club:
+        utils.send_word("I am new here, don't have identifier yet...")
         subscribe_new_user(root_dir, skClient)
+
     if not new_to_the_club:
+        utils.send_word(identifier, skClient)
         sign_up_existing_user(root_dir, skClient)
         utils.create_dir(argDirPath)
+    print("returned to main of client")
+    run_watchdog()
 
     # utils.send_dir(os.path.join(root_dir, "filesOfClient"), root_dir, skClient)
 

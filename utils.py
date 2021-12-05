@@ -13,9 +13,11 @@ def send_file(file_absolute_path, root, socket):
     file_size = os.path.getsize(file_absolute_path)
 
     file_path_from_root = remove_prefix(file_absolute_path, root)
-    if len(file_path_from_root) > 0:
-        if file_path_from_root[0] == '/':
-            file_path_from_root = file_path_from_root[1:]
+    # if len(file_path_from_root) > 0:
+    #     if file_path_from_root[0] == '/':
+    #         file_path_from_root = file_path_from_root[1:]
+
+    file_path_from_root = remove_sep_from_start_of_path(file_path_from_root)
 
     print("sending the following file: " + file_absolute_path)
 
@@ -56,12 +58,12 @@ def send_dir(dir_absolute_path, root, socket):
     send_word("sending directory", socket)
     # send path from root
     relative = remove_prefix(dir_absolute_path, root)
-    if len(relative) > 0:
-        if relative[0] == '/':
-            relative = relative[1:]
+    # if len(relative) > 0:
+    #     if relative[0] == '/':
+    #         relative = relative[1:]
+    relative = remove_sep_from_start_of_path(relative)
     send_word(relative, socket)
     print("sending the following directory: " + dir_absolute_path)
-
 
     for filename in os.listdir(dir_absolute_path):
         full_path_of_filename = os.path.join(dir_absolute_path, filename)
@@ -111,3 +113,63 @@ def receive_word(socket):
 def create_dir(dir_absolute_path):
     if not (os.path.exists(dir_absolute_path)):
         os.makedirs(dir_absolute_path)
+
+
+def remove_sep_from_start_of_path(possibly_messed_up_path):
+    if len(possibly_messed_up_path) > 0:
+        if possibly_messed_up_path[0] == os.path.sep:
+            possibly_messed_up_path = possibly_messed_up_path[1:]
+
+    return possibly_messed_up_path
+
+
+def stringify_event(watchdog_event, type):
+    path = watchdog_event.src_path
+    description = type + '$' + path
+    return description
+
+
+def get_path_of_stringified_event(event_description):
+    splitted = event_description.split('$')
+    path = splitted[1]
+    return path
+
+
+def get_type_of_stringified_event(event_description):
+    splitted = event_description.split('$')
+    type = splitted[0]
+    return type
+
+
+def notify_delete_file_or_dir(file_absolute_path, root, socket):
+    # if (not os.path.exists(file_absolute_path)):
+    #     return
+    send_word("deleted file or directory", socket)
+    file_path_from_root = remove_prefix(file_absolute_path, root)
+    file_path_from_root = remove_sep_from_start_of_path(file_path_from_root)
+    send_word(file_path_from_root, socket)
+
+
+def delete_file_or_dir(absolute_path, socket):
+    # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    # if file - delete it before recursive iteration
+    if (os.path.exists(absolute_path)):
+        if os.path.isfile(absolute_path):
+            os.remove(absolute_path)
+            time.sleep(0.5)
+            return
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    for filename in os.listdir(absolute_path):
+        full_path_of_filename = os.path.join(absolute_path, filename)
+
+        delete_file_or_dir(full_path_of_filename, socket)
+
+    # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    # if directory - delete it after recursive iteration
+    if (os.path.exists(absolute_path)):
+        if os.path.isdir(absolute_path):
+            os.rmdir(absolute_path)
+            time.sleep(0.5)
+            return
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
