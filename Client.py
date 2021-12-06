@@ -15,7 +15,7 @@ serverPort = sys.argv[2]
 argDirPath = sys.argv[3]
 timeToUpdate = sys.argv[4]
 changes_to_be_pushed = set()
-debugPort = 12341
+debugPort = 12342
 
 new_to_the_club = True
 if len(sys.argv) == 6:
@@ -33,7 +33,7 @@ def define_root_dir(full_path):
 
 def on_created(event):
     print(f"{event.src_path} has been created")
-    description = utils.stringify_event(event, "created")
+    description = utils.stringify_event(event, "modified_or_created")
     changes_to_be_pushed.add(description)
 
 
@@ -45,8 +45,9 @@ def on_deleted(event):
 
 def on_modified(event):
     print(f"{event.src_path} has been modified")
-    description = utils.stringify_event(event, "modified")
-    changes_to_be_pushed.add(description)
+    description = utils.stringify_event(event, "modified_or_created")
+    if utils.get_file_or_dir_of_stringified_event(description) == "file":
+        changes_to_be_pushed.add(description)
 
 
 def on_moved(event):
@@ -128,7 +129,8 @@ def run_watchdog():
 
 
 def handel_changes():
-    for change in changes_to_be_pushed:
+    changes_set = changes_to_be_pushed.copy()
+    for change in changes_set:
         type = utils.get_type_of_stringified_event(change)
         absolute_path = utils.get_path_of_stringified_event(change)
         skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -138,7 +140,7 @@ def handel_changes():
             utils.notify_delete_file_or_dir(absolute_path, root_dir,
                                             skClient)
 
-        if type == "created" or type == "modified":
+        if type == "modified_or_created":
             if os.path.isdir(absolute_path):
                 utils.send_dir(absolute_path, root_dir, skClient)
             if os.path.isfile(absolute_path):

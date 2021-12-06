@@ -2,14 +2,17 @@ import random
 import socket
 import os
 import string
+import sys
 import time
 import utils
 
 ########################################################
 # Global Variables
-dir_of_all_clients_path = "/home/yonadav/NetworksExersize2/clients/"
+#dir_of_all_clients_path = "/home/yonadav/NetworksExersize2/clients/"
+dir_of_all_clients_path = os.path.join(os.path.abspath(os.getcwd()), 'clients')
 root_dir_of_current_client = ""
-debugPort = 12341
+portNUm = int(sys.argv[1])
+debugPort = 12342
 
 
 ########################################################
