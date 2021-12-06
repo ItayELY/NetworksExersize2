@@ -78,6 +78,7 @@ def send_dir(dir_absolute_path, root, socket):
 
 def receive_file(file_name_absolute, file_size, socket):
     print("receiving the following file " + file_name_absolute)
+    create_dir(os.path.split(file_name_absolute)[0])
     with open(file_name_absolute, "wb") as file:
 
         c = 0
@@ -125,11 +126,22 @@ def remove_sep_from_start_of_path(possibly_messed_up_path):
 
 def stringify_event(watchdog_event, type):
     path = watchdog_event.src_path
-    description = type + '$' + path
+    dir_or_file = ''
+    if (os.path.isdir(path)):
+        dir_or_file = "dir"
+    if (os.path.isfile(path)):
+        dir_or_file = "file"
+    description = type + '$' + dir_or_file + '$' + path
     return description
 
 
 def get_path_of_stringified_event(event_description):
+    splitted = event_description.split('$')
+    path = splitted[2]
+    return path
+
+
+def get_file_or_dir_of_stringified_event(event_description):
     splitted = event_description.split('$')
     path = splitted[1]
     return path
@@ -151,6 +163,9 @@ def notify_delete_file_or_dir(file_absolute_path, root, socket):
 
 
 def delete_file_or_dir(absolute_path, socket):
+    if not os.path.exists(absolute_path):
+        return
+
     # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     # if file - delete it before recursive iteration
     if (os.path.exists(absolute_path)):

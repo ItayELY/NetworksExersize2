@@ -15,7 +15,7 @@ serverPort = sys.argv[2]
 argDirPath = sys.argv[3]
 timeToUpdate = sys.argv[4]
 changes_to_be_pushed = set()
-debugPort = 12348
+debugPort = 12341
 
 new_to_the_club = True
 if len(sys.argv) == 6:
@@ -41,12 +41,12 @@ def on_deleted(event):
     print(f"{event.src_path} has been deleted")
     description = utils.stringify_event(event, "deleted")
     changes_to_be_pushed.add(description)
-    print("Hi")
 
 
 def on_modified(event):
     print(f"{event.src_path} has been modified")
     description = utils.stringify_event(event, "modified")
+    changes_to_be_pushed.add(description)
 
 
 def on_moved(event):
@@ -139,10 +139,12 @@ def handel_changes():
                                             skClient)
 
         if type == "created" or type == "modified":
-            utils.send_file(absolute_path, root_dir, skClient)
+            if os.path.isdir(absolute_path):
+                utils.send_dir(absolute_path, root_dir, skClient)
+            if os.path.isfile(absolute_path):
+                utils.send_file(absolute_path, root_dir, skClient)
         utils.send_word("finished for now", skClient)
     changes_to_be_pushed.clear()
-
 
 
 if __name__ == "__main__":
@@ -152,9 +154,8 @@ if __name__ == "__main__":
 
     define_root_dir("/home/yonadav/Music/")
 
-
     if new_to_the_club:
-        utils.send_word("I am new here, don't have identifier yet...")
+        utils.send_word("I am new here, don't have identifier yet...", skClient)
         subscribe_new_user(root_dir, skClient)
 
     if not new_to_the_club:

@@ -9,7 +9,7 @@ import utils
 # Global Variables
 dir_of_all_clients_path = "/home/yonadav/NetworksExersize2/clients/"
 root_dir_of_current_client = ""
-debugPort = 12348
+debugPort = 12341
 
 
 ########################################################
@@ -62,6 +62,7 @@ if __name__ == "__main__":
         print('Connection from: ' + str(connected_address))
         # global root_dir_of_current_client
         root_dir_of_current_client = utils.receive_word(connected_socket)
+        root_dir_of_current_client = os.path.join(dir_of_all_clients_path, root_dir_of_current_client)
 
         while True:
             # receiving file details
