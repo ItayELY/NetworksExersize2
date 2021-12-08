@@ -15,7 +15,7 @@ serverPort = sys.argv[2]
 argDirPath = sys.argv[3]
 timeToUpdate = sys.argv[4]
 changes_to_be_pushed = set()
-debugPort = 12342
+debugPort = 12347
 
 new_to_the_club = True
 if len(sys.argv) == 6:
@@ -34,7 +34,9 @@ def define_root_dir(full_path):
 def on_created(event):
     print(f"{event.src_path} has been created")
     description = utils.stringify_event(event, "modified_or_created")
-    changes_to_be_pushed.add(description)
+    if "goutputstream" not in utils.get_path_of_stringified_event(
+            description) and not utils.get_file_or_dir_of_stringified_event(description) == "bad":
+        changes_to_be_pushed.add(description)
 
 
 def on_deleted(event):
@@ -46,12 +48,23 @@ def on_deleted(event):
 def on_modified(event):
     print(f"{event.src_path} has been modified")
     description = utils.stringify_event(event, "modified_or_created")
-    if utils.get_file_or_dir_of_stringified_event(description) == "file":
-        changes_to_be_pushed.add(description)
+    # if not utils.get_file_or_dir_of_stringified_event(description) == "bad":
+    #     if utils.get_file_or_dir_of_stringified_event(description) == "file":
+    #         changes_to_be_pushed.add(description)
 
 
 def on_moved(event):
     print(f"{event.src_path} has been moved to {event.dest_path}")
+    path = event.dest_path
+    dir_or_file = 'bad'
+    if (os.path.isdir(path)):
+        dir_or_file = "dir"
+    if (os.path.isfile(path)):
+        dir_or_file = "file"
+    description = "modified_or_created" + '$' + dir_or_file + '$' + path
+    if "goutputstream" not in utils.get_path_of_stringified_event(
+            description) and not utils.get_file_or_dir_of_stringified_event(description) == "bad":
+        changes_to_be_pushed.add(description)
 
 
 #####
@@ -74,7 +87,7 @@ def subscribe_new_user(root_dir, socket):
     print("Just received identifier from server: " + identifier)
     print("Proceeding to send root directory to server")
     utils.send_dir(root_dir, root_dir, socket)
-
+    utils.send_word("finished for now", skClient)
 
 def sign_up_existing_user(root_path, socket):
     utils.create_dir(root_path)
@@ -154,7 +167,7 @@ if __name__ == "__main__":
     skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     skClient.connect(('127.0.0.1', debugPort))
 
-    define_root_dir("/home/yonadav/Music/")
+    define_root_dir(argDirPath)
 
     if new_to_the_club:
         utils.send_word("I am new here, don't have identifier yet...", skClient)

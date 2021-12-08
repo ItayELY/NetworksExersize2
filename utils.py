@@ -13,9 +13,6 @@ def send_file(file_absolute_path, root, socket):
     file_size = os.path.getsize(file_absolute_path)
 
     file_path_from_root = remove_prefix(file_absolute_path, root)
-    # if len(file_path_from_root) > 0:
-    #     if file_path_from_root[0] == '/':
-    #         file_path_from_root = file_path_from_root[1:]
 
     file_path_from_root = remove_sep_from_start_of_path(file_path_from_root)
 
@@ -126,7 +123,7 @@ def remove_sep_from_start_of_path(possibly_messed_up_path):
 
 def stringify_event(watchdog_event, type):
     path = watchdog_event.src_path
-    dir_or_file = ''
+    dir_or_file = 'bad'
     if (os.path.isdir(path)):
         dir_or_file = "dir"
     if (os.path.isfile(path)):

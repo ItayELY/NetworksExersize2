@@ -12,7 +12,7 @@ import utils
 dir_of_all_clients_path = os.path.join(os.path.abspath(os.getcwd()), 'clients')
 root_dir_of_current_client = ""
 portNUm = int(sys.argv[1])
-debugPort = 12342
+debugPort = 12347
 
 
 ########################################################
