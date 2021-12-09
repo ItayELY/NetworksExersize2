@@ -1,3 +1,5 @@
+#by Yonadav Leibowitz and Itay Elyashiv
+
 import os
 import time
 
@@ -111,6 +113,7 @@ def receive_word(socket):
 def create_dir(dir_absolute_path):
     if not (os.path.exists(dir_absolute_path)):
         os.makedirs(dir_absolute_path)
+        time.sleep(0.5)
 
 
 def remove_sep_from_start_of_path(possibly_messed_up_path):

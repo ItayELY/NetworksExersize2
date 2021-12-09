@@ -1,3 +1,4 @@
+#by Yonadav Leibowitz and Itay Elyashiv
 import socket
 import sys
 import time
@@ -11,11 +12,11 @@ import string
 # Global Variables
 root_dir = ''
 serverIp = sys.argv[1]
-serverPort = sys.argv[2]
+serverPort = int(sys.argv[2])
 argDirPath = sys.argv[3]
 timeToUpdate = sys.argv[4]
 changes_to_be_pushed = set()
-debugPort = 12347
+debugPort = 12343
 
 new_to_the_club = True
 if len(sys.argv) == 6:
@@ -147,7 +148,7 @@ def handel_changes():
         type = utils.get_type_of_stringified_event(change)
         absolute_path = utils.get_path_of_stringified_event(change)
         skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        skClient.connect(('127.0.0.1', debugPort))
+        skClient.connect((serverIp, serverPort))
         utils.send_word(identifier, skClient)
         if type == "deleted":
             utils.notify_delete_file_or_dir(absolute_path, root_dir,
@@ -165,7 +166,7 @@ def handel_changes():
 if __name__ == "__main__":
     # open socket:
     skClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    skClient.connect(('127.0.0.1', debugPort))
+    skClient.connect((serverIp, serverPort))
 
     define_root_dir(argDirPath)
 
@@ -176,7 +177,7 @@ if __name__ == "__main__":
     if not new_to_the_club:
         utils.send_word(identifier, skClient)
         sign_up_existing_user(root_dir, skClient)
-        utils.create_dir(argDirPath)
+        #utils.create_dir(argDirPath)
     print("returned to main of client")
     run_watchdog()
 

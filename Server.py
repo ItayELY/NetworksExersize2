@@ -1,3 +1,4 @@
+#by Yonadav Leibowitz and Itay Elyashiv
 import random
 import socket
 import os
@@ -12,7 +13,7 @@ import utils
 dir_of_all_clients_path = os.path.join(os.path.abspath(os.getcwd()), 'clients')
 root_dir_of_current_client = ""
 portNUm = int(sys.argv[1])
-debugPort = 12347
+debugPort = 12343
 
 
 ########################################################
@@ -31,6 +32,7 @@ def handle_old_user(identifier, socket):
     user_dir_path = os.path.join(identifier, dir_of_all_clients_path)
     # send to client his dir
     utils.send_dir(user_dir_path, os.path.basename(user_dir_path), socket)
+    utils.send_word("finished sending root directory", socket)
 
 
 def welcome_client(socket):
@@ -51,7 +53,7 @@ def generate_identifier(chars=string.ascii_uppercase + string.ascii_lowercase + 
 
 if __name__ == "__main__":
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('', debugPort))
+    server.bind(('', portNUm))
     server.listen(5)
     # open clients directory:
     # current_directory = os.getcwd()
@@ -91,6 +93,7 @@ if __name__ == "__main__":
                 dir_full_path = os.path.join(dir_of_all_clients_path, identifier)
                 utils.send_dir(dir_full_path, dir_full_path, connected_socket)
                 utils.send_word("finished sending root directory", connected_socket)
+                break
 
             if (what_client_said == "finished for now"):
                 connected_socket.close()
@@ -117,3 +120,5 @@ if __name__ == "__main__":
         #         sData = client_socket.recv(1024)
         # print("Download Completed")
         # break
+
+
